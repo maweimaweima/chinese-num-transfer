@@ -1,8 +1,8 @@
-const numCharArr = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-const powerCharArr = ['', '十', '百', '千'];
-const sectionCharArr = ['', '万', '亿', '万亿', '亿亿'];
+const numCharArr = [ '零', '一', '二', '三', '四', '五', '六', '七', '八', '九' ];
+const powerCharArr = [ '', '十', '百', '千' ];
+const sectionCharArr = [ '', '万', '亿', '万亿', '亿亿' ];
 
-const numToChinese = (value) => {
+const numToChinese = value => {
   const numStr = value.toString();
   const sectionSignStr = numStr.replace(/(?!^)(?=(\d{4})+$)/g, ',');
   const sectionArr = sectionSignStr.split(',');
@@ -14,11 +14,11 @@ const numToChinese = (value) => {
     const powerArr = sectionArr[i].split('');
     const powerLen = powerArr.length;
     if (powerLen < 4) {
-      for(let j = 0; j < 4 - powerLen; j++) {
+      for (let j = 0; j < 4 - powerLen; j++) {
         powerArr.unshift('');
       }
     }
-
+    
     powerArr.forEach((item, index) => {
       if (item === '0' && !allZero) {
         // 千位为零其他有数加零
@@ -45,28 +45,28 @@ const numToChinese = (value) => {
       chineseStr += '零';
     }
   }
-
+  
   return chineseStr;
 };
 
-const chineseToNum = (value) => {
+const chineseToNum = value => {
   const nonZeroStr = value.replace(/零/g, '');
   const ast = [];
   let tempNum = 0;
   let powerNum = 0;
   let sectionNum = 0;
   let result = 0;
-
-  nonZeroStr.split("").forEach(item => {
+  
+  nonZeroStr.split('').forEach(item => {
     const num = numCharArr.indexOf(item);
     const powerIndex = powerCharArr.indexOf(item);
     const sectionIndex = sectionCharArr.indexOf(item);
-
+    
     if (num > -1) {
       ast.push({
         type: 'number',
         value: num,
-      })
+      });
     } else if (powerIndex > -1) {
       ast.push({
         type: 'power',
@@ -79,18 +79,20 @@ const chineseToNum = (value) => {
       });
     }
   });
-
+  
   ast.forEach((item, index) => {
     if (item.type === 'number') {
       if (ast[index - 1] && ast[index - 1].type === 'section') {
         result += sectionNum;
+        sectionNum = 0;
       }
       if (ast[index + 1] && ast[index + 1].type === 'section') {
         powerNum += item.value;
       }
       tempNum = item.value;
     } else if (item.type === 'power') {
-      powerNum += tempNum * item.value;
+      powerNum += (tempNum || 1) * item.value;
+      tempNum = 0;
     } else if (item.type === 'section') {
       if (ast[index - 1].type === 'section') {
         sectionNum = sectionNum * item.value;
@@ -100,17 +102,16 @@ const chineseToNum = (value) => {
         powerNum = 0;
       }
     }
-
+    
     if (index >= ast.length - 1) {
-      result += powerNum + tempNum;
+      result += sectionNum + powerNum + tempNum;
     }
-  })
-
-
+  });
+  
   return result;
 };
 
-export {
+module.exports = {
   numToChinese,
   chineseToNum,
-}
+};
